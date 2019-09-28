@@ -1,0 +1,211 @@
+---
+title: "<center> Titanic: Exploratory Data Analysis </center>"
+author: "<center> Miguel Ángel Sánchez </center>"
+date: "<center> 28/9/2019 <center>"
+output: 
+  html_document:
+    toc_float: TRUE
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, comment=NULL, warning=FALSE, message=FALSE, fig.align='center', 
+  fig.width = 5, fig.height = 4
+)
+```
+
+## Antes de empezar
+
+Este es un EDA básico para el conjunto de datos **titanic**. 
+Este análisis fue desarrollado con el fin de proporcionar información rápida sobre 
+los datos para las personas que solo desean tener una idea general de los mismos.
+
+Algunas aclaraciones importante:
+
+* **Survived.-** $0$ $=$ No, $1$ $=$ Yes
+* **Pclass.-** una aproximación para el estatus socioeconómico
+  - $1st$ $=$ superior 
+  - $2do$ $=$ medio 
+  - $3ro$ $=$ inferior
+
+### Lectura de la data
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(DT)
+
+df_train <- data.table::fread(
+    "train.csv", data.table = F, stringsAsFactors = T,
+    na.strings = c(NA, NULL, "")
+)
+datatable(head(df_train), options = list(scrollX = TRUE))
+```
+
+### Summary
+
+#### Variables numéricas
+
+```{r}
+describe_num <- function(bdd, digitos = 4) {
+    n_length <- nrow(bdd)
+    NA_s <- round(purrr::map_dbl(bdd, function(x) sum(is.na(x))), digitos)
+    PoctNA_s <- round(NA_s / n_length, digitos)
+    conteo <- round(purrr::map_dbl(bdd, length), digitos)
+    media <- round(purrr::map_dbl(bdd, mean, na.rm = T), digitos)
+    std <- round(purrr::map_dbl(bdd, sd, na.rm = T), digitos)
+    minimo <- round(purrr::map_dbl(bdd, min, na.rm = T), digitos)
+    Q_25 <- round(purrr::map_dbl(bdd, quantile, probs = 0.25, na.rm = T), digitos)
+    Q_50 <- round(purrr::map_dbl(bdd, quantile, probs = 0.50, na.rm = T), digitos)
+    Q_75 <- round(purrr::map_dbl(bdd, quantile, probs = 0.75, na.rm = T), digitos)
+    maximo <- round(purrr::map_dbl(bdd, max, na.rm = T), digitos)
+    bdd_summary <- rbind(
+        NA_s, PoctNA_s, conteo, media, std, minimo, Q_25, Q_50, Q_75, maximo
+    ) %>% as.data.frame()
+    return(bdd_summary)
+}
+knitr::kable(describe_num(select_if(df_train, is.numeric), 2))
+```
+
+#### Variables categóricas
+
+```{r}
+describe_cat <- function(bdd, digitos = 4) {
+    n_length <- nrow(bdd)
+    NA_s <- round(purrr::map_dbl(bdd, function(x) sum(is.na(x))), digitos)
+    PoctNA_s <- round(NA_s / n_length, digitos)
+    conteo <- round(purrr::map_dbl(bdd, length), digitos)
+    category <- round(
+      purrr::map_dbl(bdd, function(x) length(unique(na.omit(x)))), digitos
+    )
+    bdd_summary <- rbind(
+        NA_s, PoctNA_s, conteo, category
+    ) %>% as.data.frame()
+    return(bdd_summary)
+}
+knitr::kable(describe_cat(select_if(df_train, is.factor), 2))
+```
+
+Aquí hay algunas observaciones iniciales de las dos tablas: 
+
+1. Hay bastantes características categóricas (nominal, ordinal y binaria). Algunas 
+de las características ordinales se disfrazan de características numéricas 
+discretas como es el caso de la variable *(Pclass)*. 
+2. La variable **Name** tiene $891$ valores únicos para $891$ valores en total, 
+por lo que no tiene sentido incluirlo tal como está. Sin embargo, es posible que 
+podamos encontrar alguna forma de diseñar otras características a partir del nombre. 
+3. La variable **Ticket** tiene algunos valores repetidos, esto podría deberse a 
+que varios miembros de una misma familia entraban con el mismo ticket.
+
+
+## Análisis Univariado
+
+### Variable Survived
+
+```{r}
+df_train <- df_train %>% mutate(
+    Survived = factor(Survived),
+    Pclass = factor(Pclass),
+    SibSp = factor(SibSp),
+    Parch = factor(Parch)
+)
+ggplot(df_train, aes(x = Survived, fill = Survived)) + geom_bar() + 
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+Al parece la mayoría de las personas no sobrevivieron. 
+
+### Variable Pclass
+
+```{r}
+ggplot(df_train, aes(x = Pclass, fill = Pclass)) + geom_bar() + 
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+Como se esperaba, la cantidad de personas en la clase $3$ es la mayor. Sin embargo, 
+es interesante cómo en nuestra muestra hay más personas en la clase $1$ que en la $2$.
+
+### Variable Sex
+
+```{r}
+ggplot(df_train, aes(x = Sex, fill = Sex)) + geom_bar() +
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+Hay más hombres que mujeres en nuestra muestra.
+
+### Variable Age
+
+```{r}
+ggplot(df_train, aes(x = Age, y = ..density..)) + 
+  geom_histogram(color = "white", fill = "cornflowerblue", alpha = 0.6) + 
+  geom_density(size = 0.8, color = "deepskyblue4") + theme_bw()
+```
+
+Parece que la mayoría de las personas tienen entre $20$ y $40$ años.
+
+### Variable SibSp
+
+```{r fig.width=7}
+ggplot(df_train, aes(x = SibSp, fill = SibSp)) + geom_bar() +
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+### Variable Parch
+
+```{r fig.width=7}
+ggplot(df_train, aes(x = Parch, fill = Parch)) + geom_bar() +
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+La mayoría de la gente viaja sola.
+
+### Variable Embarked
+
+```{r}
+ggplot(df_train, aes(x = Embarked, fill = Embarked)) + geom_bar() +
+    scale_fill_tableau() + theme_bw() + theme(legend.position = "none")
+```
+
+### Variable Fare
+
+```{r fig.height=5 , fig.width=12}
+plot1 <- ggplot(df_train, aes(x = Fare, y = ..density..)) + 
+  geom_histogram(
+    color = "white", fill = "cornflowerblue", alpha = 0.6, bins = 25
+  ) + 
+  geom_density(size = 0.8, color = "deepskyblue4") + theme_bw()
+plot2 <- ggplot(df_train, aes(x = "", y = Fare)) + 
+  geom_boxplot(fill = "cornflowerblue", alpha = 0.6) + coord_flip() + 
+  theme_bw()
+cowplot::plot_grid(plot1, plot2)
+```
+
+## Análisis Bivariado
+
+Antes de continuar, existen un par de relaciones que pueden ser interesantes para 
+explorar. 
+Primero, graficaremos las variables **Sex, Pclass** y **Age**.
+
+```{r fig.width = 6}
+ggplot(df_train, aes(x = Pclass, y = Age, fill = Sex)) + geom_boxplot() +
+  scale_fill_tableau() + theme_bw() 
+```
+
+En general, se distribuyen de manera bastante uniforme, además se puede apreciar  
+que las mujeres son un poco más jóvenes. 
+
+Ahora examinemos cómo cada característica se relaciona con **Survived**. Primero está **Pclass**.
+
+```{r}
+ggplot(df_train, aes(x = Pclass, fill = Survived)) + geom_bar(position = "fill") +
+  scale_fill_tableau() + theme_bw() 
+```
+
+Como se esperaba, la proporción de sobrevivientes a muertos crece a medida que 
+aumenta la clase. Los pasajeros de clase superior probablemente tengan prioridad 
+al abordar botes salvavidas.
+
+## Continuará...
