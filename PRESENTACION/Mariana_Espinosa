@@ -1,0 +1,178 @@
+---
+title: "Análisis Estadístico de Defunciones Fetales"
+author: "Mariana Espinosa"
+date: "29/9/2019"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Descripción del Problema
+
+<div style="text-align: justify">
+La gestante debe mantener un ritmo de vida activo y saludable ya que estos son factores fundamentales para el completo desarrollo intrauterino y el nacimiento del bebé. El tipo de atención que recibe la madre durante su embarazo es fundamental para hacer de esta etapa positiva y sin dificultades. La OMS brinda una serie de recomendaciones sobre atención prenatal acerca de buenas prácticas a seguir, cerciorando que: “cuando se realizan en tiempo oportuno prácticas apropiadas basadas en datos objetivos, la atención prenatal puede salvar vidas” (OMS, 2016, pág. 1). 
+
+La defunción fetal es conocida como la muerte del feto antes del alumbramiento y existen diferentes factores o complicaciones en el embarazo que pueden provocarla, uno de ellos es que la violencia en las parejas que aumenta las probabilidades de muerte fetal.
+<div/>
+
+```{r include=FALSE}
+setwd("~/CURSO_R/Modulo 3/MyProyecto")
+library(readxl)
+library(dplyr)
+
+Data <- read_excel("~/CURSO_R/Modulo 3/MyProyecto/Data/Data_Defunciones_F.xlsx")
+
+Data1 <- select(Data,"causa_fetal","hij_vivm","hij_nacm","est_civil",
+                "sem_gest","lugar_ocur","prov_fall","edad_mad","con_pren")
+
+```
+
+## Edad de la Madre
+<div style="text-align: justify">
+Se oberva que la edad mínima de una madre que ha sifrido la pérdida de su embarazo es 13 años y el máximo es de 49 años de edad. En promedio una madre ha perdido a su feto aproximadamente a los 27 años de edad.
+<div/>
+```{r echo=FALSE}
+attach(Data1)
+summary(edad_mad)
+varname <- deparse(substitute(edad_mad))
+hist(edad_mad,col = "purple", xlab = "Edad", ylab = "Frecuencia",main = paste("Histograma de", varname))
+```
+
+## Estado Civil
+<div style="text-align: justify">
+El 37% de mujeres que tuvieron defunción fetal aseguraron que su estado civil es Unión Libre y el de menor proporción de muertes fetales se presenta cuando la mujer posee un estado civil viuda 0,01%.
+<div/>
+
+```{r echo=FALSE, message=FALSE}
+library(DT)
+est_civil1 <- as.factor(est_civil)
+estado1 <- table(est_civil1)
+varname <- deparse(substitute(est_civil1))
+
+library(ggplot2)
+barplot(estado1,space = 0, main = paste("Histograma de", varname),xlab = "Estado Civil", ylab = "Frecuencia",legend.text = row.names(estado1), col=c("springgreen4","springgreen3","springgreen2","springgreen1","springgreen","palegreen1","palegreen"))
+
+```
+
+## Provincia de Residencia
+<div style="text-align: justify">
+Las provincia que presentan mayor ocurrencia de fallecidos es Guayaquil (39,33%) y Pichincha (24,28%). El resto de provincias muestran una proprorción baja de fetos fallecidos y esto se debe a que el tamaño de población no es tan alta en estas provincias.
+<div/>
+
+```{r echo=FALSE, message=FALSE}
+library(fdth)
+provincia <- as.factor(prov_fall)
+provincia1 <- table(provincia)
+barplot(provincia1,space = 0, main = paste("Histograma de Provincias de Fallecimiento"),xlab = "Provincias de Fallecimiento", ylab = "Frecuencia", col= "purple")
+```
+
+## Semana de Gestación
+<div style="text-align: justify">
+En promedio la defunción de fetos aconteció en las 30,14 semanas de gestación. Sin embargo, entre los 35 a 37 semanas de gestación se presenta una mayor frecuencia de ocurrencia de muertes fetales (16,68%).  
+Las muertes fetales se presentan a partir de la 12° semana de gestación hasta la 42°semana.
+<div/>
+
+
+```{r echo=FALSE, message=FALSE}
+boxplot(sem_gest, col = "pink")
+```
+
+## Controles Prenatales
+<div style="text-align: justify">
+El promedio de controles prenatales durante el embarazo ha sido aproximadamente 5 visitas. En el rango de 3.4 a 5 visitas prenatales se presenta una mayor frecuencia (26.85%) en defunciones fetales.
+Cabe recalcar que el mínimo de visitas prenatales es 0 y un máximo de 20 visitas.
+<div/>
+
+```{r echo=FALSE, message=FALSE}
+boxplot(con_pren, col = "yellow")
+```
+
+## Número de hijos que nacieron vivos y muriero según Edad de la Madre
+**Análisis de Independencia**  
+
+- Ho: La edad de la madre e hijos que nacieron vivos y murieron son independientes*   
+- H1: La edad de la madre e hijos que nacieron vivos y murieron son dependientes* 
+  
+**Desición**  
+Dado que el p valor= 0.007174 y es menor a 	$\alpha$=0,05, se concluye que las dos variables son dependientes.
+
+
+## Lugar de Ocurrencia de Muertes Fetales en Ecuador  
+| Lugar de Ocurrencia  | Frecuencia|Porcentaje| 
+| :------------------  | :-------: | :-------:|
+| Ministerio de Salud  | 749       | 45,6%    |     
+| Junta de Beneficencia| 333       | 20,3%    | 
+| Hospital Clínica     | 322       | 19,6%    |
+| IESS                 | 128       |  7,8%    |
+| Casa                 | 60        |  3,7%    | 
+| Otro Establecimiento | 44        |  2,7%    |
+| Otro                 | 7         |  0,4%    | 
+
+## Lugar de Ocurrencia de Muertes Fetales en Ecuador
+
+<div style="text-align: justify">
+Se puede Observar además que el lugar de ocurrencia de muertes fetales se presenta en los el Ministerio de Salud (45,6%). Además el 39,9% de muertes se presentan también en las Juntas de Beneficiencia y en Hospital Clínica.
+<div/>
+
+## Análisis Estadístico Multivariado
+<div style="text-align: justify">
+Se desea Identificar las variables que explican de mejor manera los fetos nacidos muertos.
+Las variables que se usarán son las siguientes:
+<div/>
+|VARIABLES                  |
+|---------------------------|
+|Hijos nacidos muertos      |
+|Edad de la madre           |
+|Control prenatal           |
+|Estado civil               |
+|Lugar de ocurrencia        |
+|Provincia de fallecimiento |
+
+## Asociación Lineal
+```{r echo=FALSE, message=FALSE}
+library(psych)
+pairs.panels(Data1[,c("sem_gest","lugar_ocur","edad_mad","con_pren","prov_fall","causa_fetal")])
+
+```
+<div style="text-align: justify">
+Existe una asociacion lineal considerable entre la semana de gestación y el control prenatal.
+<div/>
+
+
+## Modelo de Regresión Lineal
+<div style="text-align: justify">
+**Interpretaciones:** 
+
+* Si la edad de la madre, el número de controles prenatales y la semana de gestación es 0, el número de hijos nacidos muertos será de 1.19.  
+* Si la edad de la madre incrementa en un año, el número de hijos nacidos muertos incrementara en 0.002 fetos.  
+* Si el número de controles prenatales incrementa en una unidad, el número de hijos nacidos muertos incrementara en 0.006 fetos.  
+* Si el número de semanas de gestación incrementa en una unidad, el número de hijos nacidos muertos disminuirá en 0.007 fetos. 
+<div/>
+  
+    
+## Pruebas Estadísticas
+<div style="text-align: justify">
+* Si ta es 22.492, el intercepto del modelo de regresión lineal multiple es estadísticamente significativo, por que el valor absoluto de 22.492 es > 1.96 que representa el valor t crítico.  
+* Si tb es 2.216, la pendiente del modelo de regresión lineal multiple es estadísticamente significativo, por que el valor absoluto de 2.216 es > 1.96 que representa el valor t crítico.  
+* Si tc es 2.081, la pendiente del modelo de regresión lineal multiple es estadísticamente significativo, por que el valor absoluto de 2.081 es > 1.96 que representa el valor t crítico.  
+* Si td es 4.755, la pendiente del modelo de regresión lineal multiple es estadísticamente significativo, por que el valor absoluto de 4.755 es > 1.96 que representa el valor t crítico.  
+* Si la prueba de Fisher es 9.52, el modelo de regresión lineal múltiple en su conjunto es estadísticamente significativo porque el valor absoluto de |9.52|> 4 que representa el valor F-crítico.
+<div/>
+
+## Conclusiones
+<div style="text-align: justify">
+* A los 27 años de edad de la madre se presenta el mayor índice de muertes fetales.
+* Las mujeres con estado civil "Unión Libre" presentan una mayor proporción de defunción fetal con un 37%.
+* En la provincia de Guayas y Pichincha se presenta una mayor proporción de defunciones del 63,61% y esto se debe por que existe una mayor concentración de la población ecuatoriana en estas dos provincias.
+* Entre los 35 a 37 semanas de gestación se presenta una mayor concentración de muertes fetales.
+* Los controles prenatales frecuentes durante el embarazo de las mujeres que han sufrido la perdida de su bebé oscilan entre 5 controles.
+<div/>
+
+## Conclusiones
+<div style="text-align: justify">
+* Se determina además que la edad de la madre y el número de hijos que han muerto son dependientes. 
+* Así mismo, El tipo de muerte del feto depende del lugar donde sea atentido el nacimineo del feto. Y el lugar donde más ocurren las muertes fetales es en el Ministerio de Salud (45,6%).
+* Existe una asociación lineal entre la semana de gestación y el control prenatal.
+<div/>
