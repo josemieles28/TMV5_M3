@@ -1,0 +1,83 @@
+---
+title: "Deber"
+author: "Jenny Tenisaca"
+date: "9/15/2019"
+output:
+  beamer_presentation: default
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Llamadas de Emergencia relacionadas a libadores de la ciudad de Quito
+
+
+La información proviene de los registros administrativos de las llamadas de Emergencia del Servicio Integrado de Seguridad ECU911 (SIS ECU911) con el objetivo de realizar un análisid de las llamadas relacionadas a libadores, personas que consumen alcohol en el espacio público, en la ciudad de Quito para el 2018.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library("rio")
+ecu3 <- import("Mi_base.dta")
+
+```
+
+## Tabla de Contenido
+
+- Resumen del contenido por tipo de emergencia
+- Análisis gráfico de libadores por mes
+- Análisis gráfico del tipo de emergencia
+- Análisis gráfico de la horas de ocurrencia
+
+## Tabla Resumen tipo de emergencia
+
+```{r cars, echo = FALSE}
+library(DT)
+a <- data.frame(table(ecu3$IncidentGradeName_Incidente,ecu3$N2))
+
+datatable(a)
+
+```
+
+## Análisis gráfico de libadores por mes
+
+Se puede observar en el gráfico que durante el mes de diciembre se presentan la mayor cantidad de llamadas con 7607 casos relacionados al consumo de alcohol, lo cual puede explicarse por el periodo festivo de fiestas de quito, navidad y año viejo.
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+
+ggplot(ecu3, aes(mes, libadores)) + geom_bar(stat="identity",fill="blue",color="blue")+
+  labs(y="libadores", 
+       x="mes", 
+       title="Gráfico de Libadores por mes")+
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10,11,12), label = c("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"))
+
+```
+
+## Análisis gráfico del tipo de emergencia
+
+Analizando el tipo de emergencia se oberva que las llamadas con clave naranja son las más frecuentes con respecto al resto de tipos de claves de llamadas.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+require(scales)
+ggplot(ecu3, aes(x = IncidentGradeName_Incidente, y = libadores, fill=IncidentGradeName_Incidente)) + 
+  geom_bar(stat = "identity") + 
+  scale_fill_manual(values = c("yellow","orange","red","seagreen3"))+
+   labs(y="libadores", 
+       x="Tipo de Clave", 
+       title="Gráfico de Libadores por tipo de clave")
+```
+
+## Análisis gráfico de la horas de ocurrencia
+
+Se puede observar que las horas de ocurrencia de las llamadas relacionadas al consumo de alcohol suceden en la madrugada, lo cual se explica porque los centros de diversión como bares y discotecas funcionan hasta las 02h00 o 03h00, y estos incidentes se generan después del cierre de estos locales.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library("highcharter")
+
+hchart(ecu3$hora, type = "column", name = "hora")
+```
+
+
