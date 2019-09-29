@@ -1,0 +1,76 @@
+---
+title: "Deber1"
+author: "Jenny Tenisaca"
+date: "9/13/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+#Llamadas de Emergencia relacionadas a libadores de la ciudad de Quito
+
+Se recabó información de los registros administrativos de las llamadas de Emergencia del Servicio Integrado de Seguridad ECU911 (SIS ECU911) para determinar las llamadas relacionadas a libadores, personas que consumen alcohol en el espacio público, en la ciudad de Quito para el 2018. 
+Se seleccionó una muestra que contiene información con 72438 observaciones, respecto a los datos geográficos (Zona, Provincia, Subzona, Distrito, Circuito, Subcircuito, Área), mes, día, Tipo de Clave de las emergencias, Categoría Institución, libadores, hora. 
+
+A continuación, se realiza un análisis exploratorio para el número de llamadas realizadas por el caso de libadores, para ello se obtuvo una submuestra de los casos de libadores a nivel de subcircuito . Se cuenta con un tamaño de 257 subcircuito en la ciudad de Quito donde han ocurrido incidentes relacionados al consumo de alcohol.  Además, se puede observar en en la siguiente tabla que la mayor cantidad de incidentes por el caso de libadores correponden clave amarilla(Situación en la cual existe una urgencia relativa de prioridad menor y que por lo tanto no requiere atención inmediata).
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library("rio")
+ecu3 <- import("Mi_base.dta")
+library(DT)
+a <- data.frame(table(ecu3$IncidentGradeName_Incidente,ecu3$N2))
+
+datatable(a)
+
+```
+Además, se pueden observar en la siguiente tabla que el 50% de las emergencias por libadores se da aproximadamente en Eugenio Espejo a las 16h00. 
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+d <- group_by(ecu3, Distrito)%>%
+  summarise(mediana_hora = median(hora, na.rm = TRUE))
+datatable(d)
+```
+
+## Analisis Gráfico
+
+Así tambien, se puede observar que durante el mes de diciembre se presentan la mayor cantidad de llamadas con 7607 casos relacionados al consumo de alcohol, lo cual puede explicarse por el periodo festivo de fiestas de quito, navidad y año viejo.
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+
+ggplot(ecu3, aes(mes, libadores)) + geom_bar(stat="identity",fill="blue",color="blue")+
+  labs(y="libadores", 
+       x="mes", 
+       title="Gráfico de Libadores por mes")+
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10,11,12), label = c("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"))
+
+```
+
+Por otro lado, analizando el tipo de emergencia se oberva que las llamadas con clave naranja son las más frecuentes con respecto al resto de tipos de claves de llamadas.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+require(scales)
+ggplot(ecu3, aes(x = IncidentGradeName_Incidente, y = libadores, fill=IncidentGradeName_Incidente)) + 
+  geom_bar(stat = "identity") + 
+  scale_fill_manual(values = c("yellow","orange","red","seagreen3"))+
+   labs(y="libadores", 
+       x="Tipo de Clave", 
+       title="Gráfico de Libadores por tipo de clave")
+
+```
+
+Por otro lado, analizando las horas de ocurrencia de las llamadas relacionadas al consumo de alcohol podemos observar en el siguiente gráfico, que estos incidentes suceden en la madrugada, lo cual se explica porque los centros de diversión como bares y discotecas funcionan hasta las 02h00 o 03h00, y estos incidentes se generan después del cierre de estos locales.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library("highcharter")
+
+hchart(ecu3$hora, type = "column", name = "hora")
+
+```
+
