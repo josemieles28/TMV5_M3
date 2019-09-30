@@ -1,0 +1,105 @@
+---
+title: "Presentación"
+author: "Carla Sarmiento"
+date: "20 de septiembre de 2019"
+output: 
+  ioslides_presentation:
+    template: quarterly-report.html
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+#Accidentes de transito en el Ecuador en el año 2017
+
+## Objetivo {.flexbox .vcenter}
+
+ Analizar las variables referentes a los accidentes de transito ocurridos durante el año 2017
+
+##Descripción de los datos {.flexbox .vcenter}
+
+<div style="text-align: justify">
+Se ha recolectado datos acerca de los accidentes de transito registrados por la Policia Nacional del Ecuador, institución la cual se le ha asigando  el 63 % de territorio ecuatoriano en cuanto se trata 
+a seguridad vial. Dichos datos fueron recopilados durante el año 2017. Se obtuvo datos generales sobre los siniestros como; fecha, hora, causa, clase de accidente, circuito, clima, tipo de carretera, condición de la vía, tipo de vía daños, ubicación geográfica, número de fallecidos, número de lesionados y número de vehículos involucrados
+<div/>
+
+
+```{r error=FALSE, echo=FALSE, warning=FALSE}
+library(readxl)
+ACC_2018 <- read_excel("~/Curso R/Ruge_5ta/ACC_2018.xlsx")
+ACC <- data.frame(ACC_2018)
+attach(ACC)
+```
+##Tabla de datos
+```{r  error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+ACC1 <- select(ACC,FRAT,CLIMA,CONDICION.VIA,ZONA.ACC,FALLECIDOS,ILESOS,VEHI.RETENIDOS)
+names(ACC1)[1] ="CODIGO"
+names (ACC1)[3] = "CON.VIA"
+names(ACC1)[4]="ZONA"
+names(ACC1)[5]="FALLE"
+names (ACC1)[7] = "VEHI.RET"
+library(DT)
+datatable(head(ACC1), class = 'cell-border stripe', rownames = FALSE)
+
+```
+
+## ANALISIS DE LA VARIABLE CUALITATIVA CLIMA  {.flexbox .vcenter}
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+barplot(table(CLIMA),cex.names=0.8)
+
+```
+
+##ANALISIS DE LA VARIABLE CUALITATIVA TIPO DE CARRETERA
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(highcharter)
+hchart(TIPO.CARRETERA,type = "column",color="#B71C1C")%>% hc_title(text= "Tipo de carretera")
+
+```
+
+
+##ANALISIS DE LA VARIABLE CUALITATIVA TIPO DE VÍA
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(highcharter)
+hchart(TIPO.VIA, type = "column", color = "#2980b9")%>% hc_title(text= "Tipo de Vía")
+
+```
+
+
+##ANALISIS DE LA VARIABLE CUALITATIVA ZONA DEL ACCIDENTE
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+pie(table(ZONA.ACC),col =c("aquamarine", "coral"),labels = ZONA.ACC)
+```
+
+##ANALISIS DE LA VARIABLE CUANTITATIVA FALLECIDOS
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = FALLECIDOS)) + 
+  geom_bar(width=0.5, colour="darkblue", fill="aquamarine2")
+
+```
+
+##ANALISIS DE LA VARIABLE CUANTITATIVA LESIONADOS
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = LESIONADOS)) + 
+  geom_bar(width=0.5, colour="brown1", fill="salmon")
+
+```
+##ANALISIS DE LA VARIABLE CUANTITATIVA ILESOS
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+ggplot(ACC, aes(x = ILESOS)) + 
+  geom_bar(width=0.5, colour="seagreen", fill="seagreen1")
+
+```
+##ANALISIS DE LA VARIABLE CUANTITATIVA VEHICULOS RETENIDOS
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = VEHI.RETENIDOS)) + 
+  geom_bar(width=0.5, colour="tan3", fill="wheat1")
+
+```
+
