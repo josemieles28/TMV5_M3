@@ -1,0 +1,207 @@
+---
+title: "Tarea_1"
+author: "Carla Sarmiento"
+date: "15 de septiembre de 2019"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Curso de Tratamiento, Modulamiento Estadístico y Visualización dinámica con R
+#Módulo 3
+## Accidentes de transito en el Ecuador en el año 2017
+
+#Introducción
+
+<div style="text-align: justify">
+Cada año mueren más de 1,2 millones de personas en las carreteras del mundo entero, y
+entre 20 y 50 millones padecen traumatismos no mortales. Se trata de una epidemia que
+sigue en aumento en buena parte del planeta. En los últimos cinco años, la mayoría de los países
+han aprobado las recomendaciones del Informe mundial sobre prevención de los traumatismos
+causados por el tránsito, que proporcionan orientación sobre el modo de implantar a nivel nacional
+un enfoque integral para la mejora de la seguridad vial y la reducción de las muertes en carretera.
+Sin embargo, no se ha efectuado hasta la fecha ninguna evaluación mundial sobre seguridad vial
+que indique el grado de aplicación de este tipo de estrategias. El Informe sobre la situación mundial
+de la seguridad vial, que abarca un total de 178 países y se basa en los datos de una encuesta
+normalizada llevada a cabo en 2008, constituye por tanto el primer estudio de amplio alcance
+en esta esfera. Los resultados de la encuesta ofrecen a los países una referencia para evaluar su
+situación en comparación con los demás. Los datos también pueden servir de «punto de partida»
+para la medición de los avances que se vayan logrando con el tiempo. El informe presenta además
+una serie de conclusiones fundamentales.
+<div/>
+#Objetivo
+<div style="text-align: justify">
+* Analizar las variables referentes a los accidentes de transito ocurridos durante el año 2017
+<div/>
+
+#Desarrollo 
+##Descripción de los datos
+<div style="text-align: justify">
+Se ha recolectado datos acerca de los accidentes de transito registrados por la Policia Nacional del Ecuador, institución la cual se le ha asigando  el 63 % de territorio ecuatoriano en cuanto se trata 
+a seguridad vial. Dichos datos fueron recopilados durante el año 2017. Se obtuvo datos generales sobre los siniestros como; fecha, hora, causa, clase de accidente, circuito, clima, tipo de carretera, condición de la vía, tipo de vía daños, ubicación geográfica, número de fallecidos, número de lesionados y número de vehículos involucrados
+<div/>
+
+---
+
+```{r error=FALSE, echo=FALSE, warning=FALSE}
+library(readxl)
+ACC_2018 <- read_excel("~/Curso R/Ruge_5ta/ACC_2018.xlsx")
+ACC <- data.frame(ACC_2018)
+attach(ACC)
+```
+
+```{r  error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+ACC1 <- select(ACC,FRAT,CLIMA,CONDICION.VIA,ZONA.ACC,FALLECIDOS,ILESOS,VEHI.RETENIDOS)
+names(ACC1)[1] ="CODIGO"
+names (ACC1)[3] = "CON.VIA"
+names(ACC1)[4]="ZONA"
+names (ACC1)[7] = "VEHI.RET"
+library(DT)
+datatable(head(ACC1), class = 'cell-border stripe', rownames = FALSE)
+
+```
+
+##Analisis descriptivo de las variables
+###ANALISIS DE LA VARIABLE CUALITATIVA CLIMA 
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+barplot(table(CLIMA),main = "CLIMA EN LOS ACCIDENTES DE TRANSITO")
+
+```
+---
+
+<div style="text-align: justify">
+**Interpretación**.-Según los datos recopilados en el año 2017,  de 3606 accidentes de transito en mas de 3000 siniestros se registro que se tenía un clima despejado.
+<div/>
+
+###ANALISIS DE LA VARIABLE CUALITATIVA TIPO DE CARRETERA
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(highcharter)
+hchart(TIPO.CARRETERA,type = "column",color="#B71C1C")%>% hc_title(text= "Tipo de carretera")
+
+```
+---
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, de 3606 accidentes de transito en mas de 3246 siniestros se registro que la carretera era de tipo asfaltado.
+<div/>
+
+###ANALISIS DE LA VARIABLE CUALITATIVA TIPO DE VÍA
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(highcharter)
+hchart(TIPO.VIA, type = "column", color = "#2980b9")%>% hc_title(text= "Tipo de Vía")
+
+```
+
+---
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, de 3606 accidentes de tránsito en 1366 el tipo de vía registrada era estatal.
+<div/>
+
+###ANALISIS DE LA VARIABLE CUALITATIVA ZONA DEL ACCIDENTE
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+pie(table(ZONA.ACC),col =c("aquamarine", "coral"),labels = ZONA.ACC)
+```
+
+
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, 1946 accidentes se registraron en la zona urbana. 
+<div/>
+
+###ANALISIS DE LA VARIABLE CUANTITATIVA FALLECIDOS 
+#### Tabla de Frecuencias 
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE, comment=" "}
+library(descr)
+freq(FALLECIDOS, plot=FALSE)
+
+```
+
+#### Gráfico de fallecidos
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = FALLECIDOS)) + 
+  geom_bar(width=0.5, colour="darkblue", fill="aquamarine2")
+
+```
+
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, en los accidentes de transito en el 77%, no se han registrado 
+fallecidos siendos asi que en el 33% se han regristrado de 1 hasta 22 fallecidos.
+<div/>
+
+###ANALISIS DE LA VARIABLE CUANTITATIVA LESIONADOS 
+
+#### Tabla de Frecuencias 
+
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE, comment=""}
+library(descr)
+freq(LESIONADOS, plot=FALSE)
+```
+
+#### Gráfico de lesionados
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = LESIONADOS)) + 
+  geom_bar(width=0.5, colour="brown1", fill="salmon")
+
+```
+
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, en los accidentes de tránsito en el 54%, no se han registrado 
+lesionados  y el 31% se registro un lesionado en cada accidente de tránsito
+<div/>
+
+###ANALISIS DE LA VARIABLE CUANTITATIVA ILESOS
+#### Tabla de Frecuencias 
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE, comment=""}
+library(descr)
+freq(ILESOS, plot=FALSE)
+```
+
+#### Gráfico de Ilesos
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+ggplot(ACC, aes(x = ILESOS)) + 
+  geom_bar(width=0.5, colour="seagreen", fill="seagreen1")
+
+```
+
+
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, en los accidentes de transito en el 46%, no se han registrado 
+ilesos
+<div/>
+
+
+###ANALISIS DE LA VARIABLE CUANTITATIVA VEHICULOS RETENIDOS
+#### Tabla de Frecuencias 
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE, comment=""}
+library(descr)
+freq(VEHI.RETENIDOS, plot=FALSE)
+
+```
+
+#### Gráfico de vehículos retenidos
+```{r error=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(ACC, aes(x = VEHI.RETENIDOS)) + 
+  geom_bar(width=0.5, colour="tan3", fill="wheat1")
+
+```
+
+
+**Interpretación**
+<div style="text-align: justify">
+Según los datos recopilados en el año 2017, en los accidentes de transito en el 44% de accidentes se detuvo a 2 vehiculos y la media de vehículos retenidos es de 1.
+<div/>
+
+
