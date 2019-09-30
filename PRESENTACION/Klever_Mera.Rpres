@@ -1,0 +1,233 @@
+Cantidad de Radiobases - Ecuador
+========================================================
+author: Klever Mera
+date: 29 de septiembre del 2019
+autosize: true
+
+
+========================================================
+
+La Agencia de Regulación y Control de las Telecomunicaciones (ARCOTEL), publica mensualmente el reporte de Servicio Móvil Avanzado (SMA) de las Radiobases por Prestador y por Tecnología que puede ser descargo del siguiente link: [Radiobases por Prestador y Tecnología](httphttp://www.arcotel.gob.ec/wp-content/uploads/2018/11/1.2-Radiobases-por-operador-y-tecnologia-nivel-provincial_Jul-2019.xlsx). De este archivo se tomó únicamente la hoja 'RBSxPARROQUIAHISTORICO'.
+
+En este dataset se detalla el número mensual de Radiobases de SMA, desagregado por
+
+- Provincia
+- Cantón
+- Parroquia
+- Operador (CLARO, MOVISTAR y CNT)
+- Tecnología (GSM, UMTS y LTE)
+- Cantidad
+
+
+========================================================
+Librerías utilizadas
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width = 6, fig.height = 4)
+library(openxlsx)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(DT)
+library(e1071)
+library(caret)
+library(forecast)
+library(highcharter)
+```
+
+========================================================
+
+
+## Limpieza de datos
+
+Limpieza y ordenamiento de los datos (código oculto).
+
+
+Se utilizaron las librerías "dplyr" y "tidyr" y funciones como 'gather',
+'gsub', 'while' y 'separate'
+
+```{r echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+datos <- read.xlsx(
+        "http://www.arcotel.gob.ec/wp-content/uploads/2018/11/1.2-Radiobases-por-operador-y-tecnologia-nivel-provincial_Jul-2019.xlsx",
+        sheet = "RBSxPARROQUIAHISTORICO", startRow = 12)
+# eliminación de filas y columnas que no se requieren
+datos <- datos[1:1044, -4]
+
+# columnas que son variables y que deben ser cambiadas
+RadioBaseEc <- datos %>% gather("tecnologia", "cantidad", -c(1:3))
+
+# cambio de nombre de las 3 primeras columnas
+colnames(RadioBaseEc)[1:3] <- c("provincia", "canton", "parroquia")
+
+# adición de la variable fecha
+RadioBaseEc$fecha <- Sys.Date()
+report.date <- as.Date("2015-09-01")
+i <- 1
+j <- 13572
+k <- 1
+while (j <= 298584) {
+        RadioBaseEc$fecha[i:j] <- report.date + 31*k
+        i <- i + 13572
+        j <- j + 13572
+        k <- k + 1
+}
+
+report.date <- as.Date("2017-07-01")
+i <- 298585
+j <- 314244
+k <- 1
+while (j <= 674424) {
+        RadioBaseEc$fecha[i:j] <- report.date + 31*k
+        i <- i + 15660
+        j <- j + 15660
+        k <- k + 1
+}
+
+# adición de la variable operador para CLARO
+RadioBaseEc$operador <- "OPERADOR"
+i <- 1
+j <- 5220
+while (j <= 298584) {
+        RadioBaseEc$operador[i:j] <- "CLARO"
+        i <- i + 13572
+        j <- j + 13572
+}
+
+i <- 298585
+j <- 304848
+while (j <= 674424) {
+        RadioBaseEc$operador[i:j] <- "CLARO"
+        i <- i + 15660
+        j <- j + 15660
+}
+
+# adición de la variable operador para MOVISTAR
+i <- 5221
+j <- 10440
+while (j <= 298584) {
+        RadioBaseEc$operador[i:j] <- "MOVISTAR"
+        i <- i + 13572
+        j <- j + 13572
+}
+
+i <- 304849
+j <- 311112
+while (j <= 674424) {
+        RadioBaseEc$operador[i:j] <- "MOVISTAR"
+        i <- i + 15660
+        j <- j + 15660
+}
+
+# adición de la variable operador para CNT
+i <- 10441
+j <- 13572
+while (j <= 298584) {
+        RadioBaseEc$operador[i:j] <- "CNT"
+        i <- i + 13572
+        j <- j + 13572
+}
+
+i <- 311113
+j <- 314244
+while (j <= 674424) {
+        RadioBaseEc$operador[i:j] <- "CNT"
+        i <- i + 15660
+        j <- j + 15660
+}
+
+# limpieza de nombres de la variable tecnologia
+RadioBaseEc$tecnologia <- gsub("(.00).*","\\1", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("(.50).*","\\1", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("(.*WS).*","\\1", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("LTE.1700","LTE.AWS", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("[(]","", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("GSM.851","GSM.850", RadioBaseEc$tecnologia)
+RadioBaseEc$tecnologia <- gsub("UMTS1900","UMTS.1900", RadioBaseEc$tecnologia)
+
+# cambio a factor a la variable tecnologia
+RadioBaseEc$tecnologia <- factor(RadioBaseEc$tecnologia, 
+                                 levels = c("GSM.850", "GSM.1900", "UMTS.850",
+                                            "UMTS.1900", "LTE.700", "LTE.850",
+                                            "LTE.AWS", "LTE.1900"))
+
+# cambio de orden de las columnas
+RadioBaseEc <- RadioBaseEc[, c(1, 2, 3, 6, 7, 4, 5)]
+
+# separar el año
+RadioBaseEc <- separate(RadioBaseEc, fecha, c("año", "mes"))
+```
+
+========================================================
+## Tablas
+
+Se generaron varias tablas, de las cuales se presenta a continuación la tabla general.
+```{r, echo=FALSE}
+reporte1 <- RadioBaseEc %>% group_by(año, mes, operador, tecnologia) %>% 
+        summarize(total_radiobases = sum(cantidad)) %>% 
+        arrange(desc(total_radiobases))
+datatable(reporte1)
+```
+
+========================================================
+## Gáfricos
+
+El siguiente gráfico muestra la distribución de la cantidad de radiobases instaladas por cada operador.
+
+
+
+
+```{r, echo=FALSE}
+group_operator <- RadioBaseEc %>% group_by(operador) %>% 
+        summarize(total_radiobases = sum(cantidad),
+                  media_radiobases = mean(cantidad))
+
+group_operator %>% ggplot(aes(operador, total_radiobases, fill = operador)) +
+        geom_col() +
+        xlab("Operador") + ylab("Total de Radiobases") +
+        ggtitle("Fig 2. Total Radiobases por Operador") +
+        theme(plot.title = element_text(hjust = 0.5))
+```
+
+========================================================
+## Estadísticos
+
+A continuación los estadísticos de la variable 'cantidad'.
+
+
+```{r, echo=FALSE}
+#summary(RadioBaseEc$cantidad)
+stats <- RadioBaseEc %>% summarize(Promedio = round(mean(cantidad), 2),
+                        Desv_Std = round(sd(cantidad), 2),
+                        Mediana = median(cantidad),
+                        Mínimo = min(cantidad),
+                        Máximo = max(cantidad),
+                        Moda = names(which.max(table(cantidad))),
+                        Rango = range(cantidad)[2] - range(cantidad)[1],
+                        Cant_obs = n(),
+                        Q1 = fivenum(cantidad)[2],
+                        Q3 = fivenum(cantidad)[4],
+                        Asimetría = round(skewness(cantidad), 2))
+datatable(stats)
+```
+
+========================================================
+## Histograma y Densidad 
+
+
+```{r, echo=FALSE}
+RadioBaseEc %>% ggplot(aes(cantidad)) +
+        geom_histogram(binwidth = 42, fill = "blue") +
+        xlab("Cantidad") + ylab("Frecuencia") +
+        ggtitle("Fig 3. Histograma de la Cantidad de Radiobases") +
+        theme(plot.title = element_text(hjust = 0.5))
+
+RadioBaseEc %>% ggplot(aes(cantidad)) +
+        geom_density(col = "red") +
+        xlab("Cantidad") + ylab("Densidad") +
+        ggtitle("Fig 4. Densidad de la Cantidad de Radiobases") +
+        theme(plot.title = element_text(hjust = 0.5))
+```
+
+Histograma: la mayor cantidad de datos se encuentra en los valores bajos (cero específicamente) de la cantidad de radiobases.
+
+Densidad: la distribución no es normal y más bien tiende hacia la distribución de Poisson o Gamma, por la larga cola hacia la derecha, lo que también muestra que su asimetría es positiva
