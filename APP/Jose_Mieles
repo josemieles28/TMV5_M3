@@ -1,0 +1,127 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+library(shiny)
+library(DT)
+
+# Define UI for application that draws a histogram (para que ordene control a +control i)
+ui <- fluidPage(
+    
+    # Application title
+    titlePanel("Deber Final"),
+    
+    # Sidebar with a slider input for number of bins 
+    #sidebarLayout(
+    
+    #sidebarPanel(
+    fluidRow(column(3,
+                    conditionalPanel(condition = 'input.conditionedpanels=="texto"',
+                                     textInput("texto", "ingrese un texto"),
+                                     actionButton("boton","ejecutar")
+                    ), 
+                    
+                    conditionalPanel(condition = 'input.conditionedpanels=="tabla"',
+                                     selectInput("df", "selecciones el df", choices = c("dataxlsx","iris"), selected = dataxlsx),
+                                     numericInput("n","Ingrese el número de registros",valu=5,min=2,max=100)
+                    ),
+                    
+                    conditionalPanel(condition = 'input.conditionedpanels=="histograma"',
+                                     sliderInput("bins",
+                                                 "Number of bins:",
+                                                 min = 1,
+                                                 max = 50,
+                                                 value = 30)
+                    )
+    ),
+    
+    # Show a plot of the generated distribution
+    #mainPanel(
+    column(5, 
+           tabsetPanel(
+               tabPanel("texto",
+                        textOutput("texto_salida"),
+                        verbatimTextOutput("nchar")
+               ),
+               
+               tabPanel("tabla",
+                        div(DTOutput("tabla"),
+                            style="font-size:80%")
+               ),
+               
+               tabPanel("documento",
+                        htmlOutput('documento')
+               ),
+               tabPanel("histograma",
+                        plotOutput("distPlot")
+               ),id="conditionedpanels"
+               
+           )
+           #   )
+    ),
+    
+    column(4,
+           h3("h3"),
+           h4("h4"),
+           h5("h5"),
+           helpText("texto ayuda"),
+           #img(src="mintur.png", height=180,width=185),
+           HTML('<center><img src="mintur.png" width="185"></center>'),
+           h5("APP-SHINY-DEMO",aling ="center")
+           
+    )
+    )
+)
+
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+    
+    texto_salida <- eventReactive(input$boton,{
+        paste("El texto ingresado es", input$texto)
+        
+    })
+    
+    output$texto_salida <- renderText({
+        texto_salida()
+    })
+    
+    
+    output$nchar <- renderText(nchar(input$texto))
+    
+    output$tabla <- renderDT(
+        {
+            tmp <- if(input$df=="mtcars") {
+                mtcars  
+            }else{iris}
+            tmp[1:input$n,]
+        },
+        options = list(lengthChange=TRUE,
+                       scrollY=360,
+                       scroller=TRUE,
+                       pageLength=20)
+    )
+    
+    output$distPlot <- renderPlot({
+        # generate bins based on input$bins from ui.R
+        x    <- faithful[, 2]
+        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+        paste("El texto ingresado es", input$texto)
+        
+        # draw the histogram with the specified number of bins
+        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    })
+    output$documento <-renderText({
+        return(paste0('<iframe style="height:600px; width:100%" src="',
+                      "MachineLearning.pdf", '"></iframe>'))
+    })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
