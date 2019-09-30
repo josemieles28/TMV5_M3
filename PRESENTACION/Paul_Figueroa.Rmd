@@ -1,0 +1,265 @@
+---
+title: "Presentación"
+author: "Paúl Figueroa"
+date: "29/9/2019"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+<center>![R Users Group - Ecuador](http://rusersgroup.com/img/final5x5.png)</center>
+
+<center> <h1><span style="color:red"> Informe exploratorio de datos con la Base Defunciones Fetales 2013 </span></h1> </center>
+
+## La base de datos de Defunciones fetales 2013 contiene:
+
+**A) Datos de la defunción fetal**  
+
+* Sexo  
+* Peridod de gestación  
+* Fecha de fallecimiento  
+* Asistido por  
+* Producto del embarazo  
+* Lugar de ocurrencia  
+* Causa que ocasionó la defunción fetal 
+
+## 
+**B) Datos de la madre**  
+
+* Edad de la madre
+* Nacionalidad
+* Número de controles prenatales
+* Número de hijos vivos
+* Número de hijos que nacieron vivos han muerto
+* Número de hijos que nacieron muertos
+* Autoidentificación etnica de la madre
+* Estado civil o conyugal
+* Alfabetismo e instrucción
+* Residencia habitual de la madre
+* Área  
+
+**C) Información general**  
+
+* Datos de la persona que atendió la defunción fetal
+
+Casos	1643  
+Variables	41  
+
+##
+<center> <h2><span style="color:red"> Tabla de variables </span></h2> </center> 
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+options(scipen = 999)
+library(dplyr)
+library(ggplot2) 
+library(readxl)
+library(gmodels)
+library(Hmisc)
+library(ggthemes)
+library(haven)
+library(openxlsx)
+library(magrittr)
+library(tidyverse)
+library(tidyverse)
+library(extrafont)
+library(ps)
+library(psych)
+library(DT)
+library(htmlTable)
+auto <- read.xlsx("Data/diccionario-2013.xlsx")
+datatable(auto)
+
+```
+
+
+```{r echo=FALSE,message=FALSE,include=FALSE}
+Base <- read.xlsx("Data/defunciones_fetales2013.xlsx")
+
+Base_1 <- tbl_df(Base)
+
+glimpse(Base_1)
+
+Var_cat <- c("prov_insc","cant_insc","parr_insc","mes_insc","sexo","mes_fall","asis_por"
+            ,"p_emb","lugar_ocur","prov_fall","cant_fall","parr_fall","area_fall",
+            "causa_fetal","mes_mad","nac_mad","etnia","est_civil","sabe_leer","niv_inst",
+            "prov_res","cant_res","parr_res","area_res")
+Base_1[Var_cat] <- lapply(Base_1[Var_cat], factor)
+
+glimpse(Base_1)
+```
+##
+<center> <h2><span style="color:red"> Tabla provincia de fallecimiento por sexo del fallecido </span></h2> </center>
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+Tp <-table(Base_1$prov_fall,Base_1$sexo )
+htmlTable(Tp)
+```
+
+Podemos observar en tabla que las provincias que más resalta son: la provincia del Guayas con 380 defunciones del género masculino y 276 defunciones del género femenino y la provincia pichincha con 218 defunciones del género masculino y 181 defunciones del género femenino.
+
+##
+<center> <h2><span style="color:red"> Lugar de ocurrencia del fallecimiento </span></h2> </center>
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+table(Base_1$lugar_ocur )
+prop.table(table(Base_1$lugar_ocur))*100
+
+```
+
+
+El 45.58% de las muertes fetales en el año 2013 se dieron en el ministerio 
+ de salud, donde de los 1643 casos registrados en este año 749 pertenecen a dicha institución,
+ además, el 20.26% de las muertes fetales se dieron en juntas de beneficencia registrando
+ 333 casos y el 19.59% de las muertes fetales se dieron en hospitales, clínicas y consultorios 
+ registrando 322 casos, lo que nos permite cuestionar que dichas instituciones no cuentan con 
+ las instalaciones ni con los instrumentos necesarios o a su vez no cuentan con médicos especializados
+ para atender todos tipo de partos.
+
+##
+<center> <h2><span style="color:red"> Estado civil de la madre </span></h2> </center>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+table(Base_1$est_civil )
+prop.table(table(Base_1$est_civil))*100
+
+```
+
+
+ El 37.98 % de las muertes fetales se produjeron en madres de estado civil en unión libre
+registrando 624 casos, seguido con el 27.02% en mujeres de estado civil casadas registrando
+ 444 casos, el 15.34 % en mujeres de estado civil soltera con 253 casos registrados y el
+ 18.69% con 307 casos registrados se dio en mujeres que no registraron su estado civil.
+ El otro 0.97%, desgastante se registra en mujeres con estado civil divorciada, separada y viuda
+ registrando 9, 4 y 3 casos respectivamente.
+
+##
+
+<center> <h2><span style="color:red"> Nivel de instrucción de la madre </span></h2> </center>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table(Base_1$sabe_leer)
+prop.table(table(Base_1$sabe_leer))*100
+table(Base_1$niv_inst)
+prop.table(table(Base_1$niv_inst))*100
+```
+
+
+Otro dato muy importante que se debe analizar es el nivel de instrucción de la madre,
+el 96.40% de las madres encuentras si saben leer y escribir. 
+Podemos apreciar también que el 41.02% de las mujeres encuestadas tienen educación secundaria
+que corresponde a 674 mujeres, el 25.44% de las mujeres encuestadas tiene educación 
+primaria que corresponden a 418 mujeres, otro dato que sobre sale son las mujeres con
+educación superior con el 16.67% que corresponde a 274 mujeres, se podría concluir
+que el nivel de educación de las mujeres es muy relevante en el momento de concebir un 
+hijo.
+
+##
+<center> <h2><span style="color:red"> Sexo del feto por area de fallecimiento </span></h2> </center>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Ar <- round(prop.table(table(Base_1$sexo,Base_1$area_fall),1),3)*100
+htmlTable(Ar)
+```
+
+El 97.61% de las defunciones fetales de sexo masculino se produjeron en la zona urbana al 
+igual que del sexo femenino con el 98.74%.
+
+##
+<h2><span style="color:red"> Descripción de todas las variables
+</span></h2>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+describe(Base_1)
+summary(Base_1)
+```
+
+##
+<h2><span style="color:red"> Análisis de la edad de la madre
+</span></h2>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(Base_1$edad_mad)
+boxplot(Base_1$edad_mad, col="green",main="Edad de la madre")
+```
+
+La edad promedio de las madres es de 27 años, existe mujeres que a los 13 años de edad
+ ya registran muertes fetales, así mismo mujeres de 49 años de edad que han tenido que sufrir 
+una muerte fetal, ha esta edad es muy probable que dicha muerte sea por diversas enfermedades
+que se presentan a tan alta edad, un embarazo a los 49 años siempre tiene un mayor riesgo.
+ El 25% de las mujeres que registran muertes fetales se encuentran concentradas a l0s 21 años de edad 
+y el 75% en los 33 años de edad.
+
+##
+<h2><span style="color:red"> Análisis de la etnia de la madre
+</span></h2>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(Base_1$etnia)
+round(prop.table(summary(Base_1$etnia)),3)*100
+ggplot(data=Base_1, aes(x=etnia)) + geom_bar(stat="count") +
+  theme (text = element_text(size=10))+
+  ggtitle ("Autoidentificación étnica de la madre")+
+  theme (plot.title = element_text(family="Comic Sans MS",
+                                   size=rel(2), 
+                                   vjust=2, 
+                                   face="italic",
+                                   color="red", 
+                                   lineheight=1.5)) +
+labs(x = "Etnia",y = "Numero de casos") +
+theme(axis.title.x = element_text(face="plain", vjust=-0.5, colour="orange", size=rel(1.5)))+
+theme(axis.title.y = element_text(face="bold", vjust=1.5, colour="blue", size=rel(1.5)))   
+
+```
+
+Podemos observar que el 64,75% de las mujeres encuestadas se identifican como mestizas
+que corresponde a 1064 casos, el 28,11% que equivale a 462 casos prefirió no decir su etnia y
+las mujeres identificadas con etnia mulata son las que menos registran casos con un 0.30% 
+que equivale a 5 casos. El otro 5% se divide entre afro ecuatoriana, blanca, montubia y negra.
+
+##
+<h2><span style="color:red"> Análisis del periodo de gestación
+</span></h2>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(Base_1$sem_gest)
+boxplot(Base_1$sem_gest, col="red",main="Período de gestación", ylab="Semanas de gestación")
+```
+
+ El embarazo tiene una duración aproximada de 40 semanas, contadas a partir de la 
+fecha de la última menstruación. Siempre nos referimos a la fecha del parto como
+un dato aproximado, estimado o probable, debido a la gran variabilidad que puede
+constatarse en el término de la gestación en nuestra especie.
+Según lo analizado con la base de datos proporcionada por el INEC podemos ver que en promedio 
+en el año 2013 los fetos fallecen a las 30 semanas de gestación, pero existe algo muy preocupante 
+ya que se registran casos que a las 12 semanas de gestación el feto fallece, por otro 
+ lado también se registran casos que sobresalen de las 40 semanas de gestación y de igual 
+manera el feto fallece. El 25% de los casos fallecen a la semana 24 de gestación y el 
+75% de los casos fallecen en la semana 36 de gestación.
+
+##
+<center> <h1><span style="color:red"> Regresión lineal </span></h1> </center> 
+
+**Veamos la asociación lineal de las variables**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pairs.panels(Base_1[,c("sem_gest", "sexo", "edad_mad",
+                       "hij_viv", "hij_vivm", "hij_nacm",
+                       "con_pren", "etnia", "est_civil", "niv_inst")])
+```
+
+##
+<center> <h1><span style="color:red"> Modelo de regresión lineal </span></h1> </center> 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+modelo_l <- lm(sem_gest ~ edad_mad + hij_viv
+                + hij_vivm + hij_nacm + etnia + est_civil+ niv_inst
+                + con_pren , data = Base_1)
+modelo_l
+
+summary(modelo_l)
+```
+
+Ho: El modelo no es estadísticamente significativo  
+H1: El modelo es estadísticamente significativo  
+
+Valor de p-value del modelo = 0.00000000000000022 < 0.05 es decir que le modelo es estadísticamente significativo como solo estamos explicado el modelo no tiene mayor relevancia el R2 Podemos observar que en el modelo plateado existen variables que no son elevantes, son aquellas que no se encuentran marcadas con asterisco.
